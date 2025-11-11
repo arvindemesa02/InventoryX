@@ -1,0 +1,49 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  CELERY_TASK_ALWAYS_EAGER: "1"
+
+services:
+  postgres:
+    image: postgres:15
+    env:
+      POSTGRES_DB: testdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432:5432
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.11'
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+  displayName: Install dependencies
+
+- script: |
+    export DJANGO_SECRET_KEY=ci
+    export DJANGO_DEBUG=0
+    export POSTGRES_DB=testdb
+    export POSTGRES_USER=postgres
+    export POSTGRES_PASSWORD=postgres
+    export POSTGRES_HOST=127.0.0.1
+    export POSTGRES_PORT=5432
+    export CELERY_TASK_ALWAYS_EAGER=$(CELERY_TASK_ALWAYS_EAGER)
+    python manage.py migrate
+    python manage.py test
+  displayName: Run tests
+
+- task: Docker@2
+  displayName: Build Docker image
+  inputs:
+    command: build
+    Dockerfile: '**/Dockerfile'
+    tags: |
+      $(Build.BuildId)

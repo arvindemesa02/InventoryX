@@ -1,15 +1,4 @@
 repos:
-  - repo: https://github.com/homebysix/pre-commit-macadmin
-    rev: v1.12.3
-    hooks:
-      - id: check-git-config-email
-        args:
-          [
-            "--domains",
-            "outcodesoftware.com",
-            "herculesrx.onmicrosoft.com",
-            "herculesrx.com"
-          ]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
@@ -32,7 +21,9 @@ repos:
     hooks:
       - id: check-untracked-migrations
       - id: check-unapplied-migrations
-        entry: python manage.py migrate --check
+        language: system
+        entry: bash -lc "docker compose exec -T web python manage.py migrate --check"
+        pass_filenames: false
   - repo: https://github.com/hadialqattan/pycln
     rev: v2.5.0
     hooks:
