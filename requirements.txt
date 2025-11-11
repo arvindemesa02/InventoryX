@@ -1,9 +1,10 @@
-Django==4.2.7
-psycopg[binary]==3.2.1
-graphene-django==3.0.0
-django-filter==23.5
 celery==5.3.6
-redis==5.0.1
-python-dotenv==1.0.1
-PyJWT==2.9.0
+Django==4.2.7
+django-filter==23.5
+graphene-django==3.0.0
+graphene-graphiql-explorer==0.1.1
 gunicorn==21.2.0
+psycopg[binary]==3.2.1
+PyJWT==2.9.0
+python-dotenv==1.0.1
+redis==5.0.1
