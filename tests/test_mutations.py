@@ -1,3 +1,4 @@
+import json
 from graphene_django.utils.testing import GraphQLTestCase
 from inventory.models import Product, Customer
 
@@ -15,8 +16,11 @@ class MutationTests(GraphQLTestCase):
             order { id totalCents }
           }
         }'''
-        variables = {"cust": str(self.cust.id), "items":[{"product_id": self.prod.id, "quantity": 3}]}
-        response = self.query(mutation, op_name="CreateOrder", variables=variables)
+        variables = {
+             "cust": str(self.cust.id),
+             "items": [json.dumps({"product_id": self.prod.id, "quantity": 3})]
+         }
+        response = self.query(mutation, operation_name="CreateOrder", variables=variables)
         self.assertResponseNoErrors(response)
         data = response.json()["data"]["createOrder"]["order"]
         assert data["totalCents"] == 600

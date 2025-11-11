@@ -13,9 +13,13 @@ class CustomerType(DjangoObjectType):
         fields = ("id","email","full_name")
 
 class OrderItemType(DjangoObjectType):
+    total_cents = graphene.Int()
     class Meta:
         model = OrderItem
         fields = ("id","product","quantity","unit_price_cents","total_cents")
+
+    def resolve_total_cents(self, info):
+        return self.total_cents
 
 class OrderType(DjangoObjectType):
     total_cents = graphene.Int()
