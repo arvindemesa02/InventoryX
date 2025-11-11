@@ -1,0 +1,80 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.egg
+.eggs/
+
+# Django
+*.log
+*.pot
+*.pyc
+db.sqlite3
+local_settings.py
+media/
+staticfiles/
+static/
+.env
+
+# Environment / Virtualenv
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Docker
+*.pid
+*.seed
+docker-compose.override.yml
+**/__pycache__/
+
+# Coverage / Testing
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.tox/
+.pytest_cache/
+.mypy_cache/
+
+# Node / Frontend (if ever added)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build artifacts
+build/
+dist/
+*.bak
+*.swp
+*.tmp
+*.log
+
+# Pre-commit
+.pre-commit-config.yaml~
+
+# Data / Misc
+*.db
+*.sqlite3
+*.tar.gz
+*.zip
+*.bak
