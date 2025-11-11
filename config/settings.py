@@ -18,6 +18,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "graphene_django",
+    "django_filters",
+    "graphene_graphiql_explorer",
     "inventory",
 ]
 
@@ -70,9 +72,7 @@ AUTH_PASSWORD_VALIDATORS = [
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-GRAPHENE = {
-    "SCHEMA": "inventory.schema.schema",
-}
+GRAPHENE = {"SCHEMA": "config.schema.schema", "ATOMIC_MUTATIONS": True}
 
 CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL

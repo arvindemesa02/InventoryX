@@ -1,32 +1,39 @@
-import graphene
-from graphene_django import DjangoObjectType
-from ..models import Product, Customer, OrderItem, Order
+from modules.graphene_custom.custom_django_crud import CustomDjangoCRUDObjectType
+from modules.shared.utils import CustomNode, TotalCountConnection
 
-class ProductType(DjangoObjectType):
+from ..models import Product, Customer, InventoryEntry, Order, OrderItem
+
+
+class ProductNode(CustomDjangoCRUDObjectType):
     class Meta:
         model = Product
-        fields = ("id","name","sku","price_cents","is_active")
+        interfaces = (CustomNode,)
+        connection_class = TotalCountConnection
 
-class CustomerType(DjangoObjectType):
+
+class CustomerNode(CustomDjangoCRUDObjectType):
     class Meta:
         model = Customer
-        fields = ("id","email","full_name")
+        interfaces = (CustomNode,)
+        connection_class = TotalCountConnection
 
-class OrderItemType(DjangoObjectType):
-    total_cents = graphene.Int()
+
+class InventoryEntryNode(CustomDjangoCRUDObjectType):
+    class Meta:
+        model = InventoryEntry
+        interfaces = (CustomNode,)
+        connection_class = TotalCountConnection
+
+
+class OrderItemNode(CustomDjangoCRUDObjectType):
     class Meta:
         model = OrderItem
-        fields = ("id","product","quantity","unit_price_cents","total_cents")
+        interfaces = (CustomNode,)
+        connection_class = TotalCountConnection
 
-    def resolve_total_cents(self, info):
-        return self.total_cents
 
-class OrderType(DjangoObjectType):
-    total_cents = graphene.Int()
-
+class OrderNode(CustomDjangoCRUDObjectType):
     class Meta:
         model = Order
-        fields = ("id","customer","status","items","total_cents")
-
-    def resolve_total_cents(self, info):
-        return self.total_cents
+        interfaces = (CustomNode,)
+        connection_class = TotalCountConnection
