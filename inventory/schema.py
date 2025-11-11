@@ -1,5 +1,5 @@
 import graphene
-from .schemas import queries
+from .schemas import queries, mutations
 
 
 class Query(
@@ -8,6 +8,17 @@ class Query(
     queries.InventoryEntries,
     queries.Orders,
     queries.OrderItems,
+    graphene.ObjectType,
+):
+    pass
+
+
+class Mutation(
+    mutations.Products,
+    mutations.Customers,
+    mutations.InventoryEntries,
+    mutations.Orders,
+    mutations.OrderItems,
     graphene.ObjectType,
 ):
     pass

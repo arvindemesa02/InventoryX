@@ -11,4 +11,12 @@ class Query(
     debug = graphene.Field(DjangoDebug, name="_debug")
 
 
-schema = graphene.Schema(query=Query)
+class Mutation(
+    # add more mutations here
+    InventorySchema.Mutation,
+    graphene.ObjectType,
+):
+    debug = graphene.Field(DjangoDebug, name="_debug")
+
+
+schema = graphene.Schema(query=Query, mutation=Mutation)
