@@ -1,20 +1,28 @@
 import graphene
-from ..models import Product, Order
-from .types import ProductType, OrderType
 
-class Query(graphene.ObjectType):
-    products = graphene.List(ProductType, search=graphene.String())
-    product = graphene.Field(ProductType, id=graphene.ID(required=True))
-    orders_by_customer = graphene.List(OrderType, customer_id=graphene.ID(required=True))
+from .types import ProductNode, CustomerNode, InventoryEntryNode, OrderNode, OrderItemNode
 
-    def resolve_products(self, info, search=None):
-        qs = Product.objects.all().order_by("name")
-        if search:
-            qs = qs.filter(name__icontains=search)
-        return qs
 
-    def resolve_product(self, info, id):
-        return Product.objects.get(pk=id)
+class Products(graphene.ObjectType):
+    product = ProductNode.ReadField()
+    products = ProductNode.BatchReadField()
 
-    def resolve_orders_by_customer(self, info, customer_id):
-        return Order.objects.filter(customer_id=customer_id).order_by("-created_at")
+
+class Customers(graphene.ObjectType):
+    customer = CustomerNode.ReadField()
+    customers = CustomerNode.BatchReadField()
+
+
+class InventoryEntries(graphene.ObjectType):
+    inventory_entry = InventoryEntryNode.ReadField()
+    inventory_entries = InventoryEntryNode.BatchReadField()
+
+
+class Orders(graphene.ObjectType):
+    order = OrderNode.ReadField()
+    orders = OrderNode.BatchReadField()
+
+
+class OrderItems(graphene.ObjectType):
+    order_item = OrderItemNode.ReadField()
+    order_items = OrderItemNode.BatchReadField()

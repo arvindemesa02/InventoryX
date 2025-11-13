@@ -2,9 +2,13 @@ celery==5.3.6
 Django==4.2.7
 django-filter==23.5
 graphene-django==3.0.0
+graphene-django-crud==2.0.0
+graphene-file-upload==1.3.0
 graphene-graphiql-explorer==0.1.1
 gunicorn==21.2.0
 psycopg[binary]==3.2.1
 PyJWT==2.9.0
 python-dotenv==1.0.1
+pytz==2024.1
 redis==5.0.1
+stringcase==1.2.0
