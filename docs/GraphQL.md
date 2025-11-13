@@ -1,107 +1,114 @@
-# GraphQL
+# GraphQL API
+
+This document describes how the GraphQL layer in this project is structured and how to work with it when adding features or tests.
+
+The implementation is based on:
+- Django
+- graphene-django
+- graphene-django-crud
+- modules/graphene_custom helpers
 
 ## Endpoint
-- `POST http://localhost:8000/graphql/`
-- GraphiQL UI enabled at the same path for interactive exploration.
 
-## Types (selected)
-- `Product { id, name, sku, priceCents, isActive }`
-- `Customer { id, email, fullName }`
-- `OrderItem { id, product, quantity, unitPriceCents, totalCents }`
-- `Order { id, customer, status, items, totalCents }`
+- URL: POST /graphql/
+- View: CustomGraphQLView (supports GraphiQL and file uploads)
+- Configured in config/urls.py
 
-> Graphene-Django auto-camelcases fields by default. For example, `price_cents` → `priceCents`.
+CustomGraphQLView extends FileUploadGraphQLView and:
+- wraps the view with csrf_exempt
+- customizes error formatting to add extensions.exception.type with the original Python exception class name.
+
+## Schema Layout
+
+Top-level schema is in config/schema.py:
+- Query and Mutation are composed from inventory.schema
+- Adds a _debug field (DjangoDebug) when DEBUG=True
+
+Inventory schema (inventory/schema.py) composes:
+- Query from: Products, Customers, InventoryEntries, Orders, OrderItems
+- Mutation from: Products, Customers, InventoryEntries, Orders, OrderItems
+
+Each group is implemented in inventory/schemas/queries.py and inventory/schemas/mutations.py.
+
+## Node Types
+
+Nodes live in inventory/schemas/types.py:
+- ProductNode
+- CustomerNode
+- InventoryEntryNode
+- OrderNode
+- OrderItemNode
+
+All extend:
+- CustomDjangoCRUDObjectType
+- CustomNode (GraphQL ids are raw PKs, not Relay-encoded)
+- use TotalCountConnection for nested relations so connections expose totalCount.
+
+Field naming in GraphQL uses camelCase:
+- price_cents -> priceCents
+- is_active -> isActive
+- created_at -> createdAt
+- unit_price_cents -> unitPriceCents
 
 ## Queries
 
-### 1) List products (with optional search)
-```graphql
-{
-  products(search: "mouse") {
-    id
-    name
-    sku
-    priceCents
-    isActive
-  }
-}
-```
+Each entity exposes:
+- a single-object field via ReadField (e.g. product, order)
+- a list field via BatchReadField (e.g. products, orders)
 
-### 2) Get a single product by ID
-```graphql
-{
-  product(id: 1) {
-    id
-    name
-    sku
-    priceCents
-  }
-}
-```
+List fields:
+- accept where: <Model>WhereInput
+- accept orderBy: [<Model>OrderByInput!]
+- return a plain list (not a Relay connection)
 
-### 3) Orders by customer
-```graphql
-{
-  ordersByCustomer(customerId: 1) {
-    id
-    status
-    totalCents
-    items { quantity unitPriceCents totalCents product { sku } }
-  }
-}
-```
+Examples:
+- products(where: ProductWhereInput, orderBy: [ProductOrderByInput!])
+- orders(where: OrderWhereInput, orderBy: [OrderOrderByInput!])
+
+Nested relations (e.g. order.items) use TotalCountConnection:
+- items { totalCount, edges { node { ... } } }
+
+## Timezone-aware Filtering
+
+CustomDjangoCRUDObjectType implements logic to:
+- look for createdAt filters in GraphQL variables
+- read a timezone cookie (minutes offset from UTC)
+- convert that to a timezone name and apply a TimeZoneConversion DB function
+
+Any model with created_at can benefit from this when queried via GraphQL.
 
 ## Mutations
 
-### 1) Create product
-```graphql
-mutation {
-  createProduct(name: "USB-C Cable", sku: "CB-050", priceCents: 300) {
-    product { id name sku priceCents }
-  }
-}
-```
+Each entity exposes three CRUD mutations via <Node>.CreateField / UpdateField / DeleteField.
 
-### 2) Create order (with variables)
-```graphql
-mutation CreateOrder($cust: ID!, $items: [JSONString!]!) {
-  createOrder(customerId: $cust, items: $items) {
-    order { id totalCents }
-  }
-}
-```
-**Variables**
-```json
-{
-  "cust": "1",
-  "items": [
-    { "product_id": 1, "quantity": 3 }
-  ]
-}
-```
+For example (Products group):
+- productCreate(input: ProductCreateInput!): ProductCreatePayload
+- productUpdate(where: ProductWhereInput!, input: ProductUpdateInput!): ProductUpdatePayload
+- productDelete(where: ProductWhereInput!): ProductDeletePayload
 
-> On success: the order is created, inventory is decremented, and an analytics task is queued.
+Payloads share the same shape:
+- ok: Boolean!
+- errors: [ErrorType!] (field, messages)
+- result: NodeType (for create/update; delete omits result)
 
-### 3) Cancel order
-```graphql
-mutation {
-  cancelOrder(orderId: 123) { ok }
-}
-```
-> This marks the order as `CANCELLED` and **restocks** each item quantity.
+## Error Handling
 
-## Curl / HTTPie
-```bash
-# Products list
-http POST :8000/graphql query='{ products { id name sku priceCents } }'
+CustomGraphQLView.format_error adds:
+- extensions.exception.type with the original Python exception class name
 
-# Create order
-http POST :8000/graphql   query='mutation CreateOrder($cust: ID!, $items: [JSONString!]!) {\n  createOrder(customerId: $cust, items: $items) { order { id totalCents } }\n}'   variables:='{"cust":"1","items":[{"product_id":1,"quantity":2}]}'
-```
+This is useful for debugging and can be asserted in tests.
 
-## Common Gotchas
-- Remember camelCase in GraphQL (`totalCents`, not `total_cents`).
-- For JSON inputs (e.g., `items`), you can pass either:
-  - Literal JSON objects in GraphiQL variables, or
-  - Strings that serialize to JSON when using certain clients.
-- Ensure Celery is running so `post_order_analytics_async` is executed asynchronously (or set `CELERY_TASK_ALWAYS_EAGER=1`).
+## Adding a New Entity
+
+To expose a new model (e.g. Supplier):
+
+1) Create model in inventory/models.py.
+2) Create SupplierNode in inventory/schemas/types.py extending CustomDjangoCRUDObjectType and CustomNode.
+3) Add Suppliers query group in inventory/schemas/queries.py:
+   - supplier = SupplierNode.ReadField()
+   - suppliers = SupplierNode.BatchReadField()
+   and include it in inventory/schema.py Query.
+4) Add Suppliers mutation group in inventory/schemas/mutations.py:
+   - supplier_create / supplier_update / supplier_delete
+   and include it in inventory/schema.py Mutation.
+5) Add query and mutation tests under inventory/tests/queries and inventory/tests/mutations.

@@ -1,4 +1,5 @@
 # README.md
+**This project was designed and implemented end-to-end to demonstrate modern backend engineering skills, including system architecture, Django ORM modeling, GraphQL schema design, Celery task orchestration, containerized local development, and automated pipelines. I built the full API layer, database models, tests, Celery workers, and documentation, as well as all CI/CD and development tooling. All commits and contributions in this repository are my own work.**
 
 A production-leaning Django + GraphQL API for inventory & order management.
 
@@ -38,12 +39,10 @@ open http://localhost:8000/graphql/
 make test
 ```
 
-> Admin is at `http://localhost:8000/admin/` — create a superuser with:
->
-> ```bash
+ Admin is at `http://localhost:8000/admin/` — create a superuser with:
+```bash
 docker compose exec web python manage.py createsuperuser
-> ```
-
+```
 ---
 
 ## Project Layout
@@ -167,7 +166,7 @@ GraphQL endpoint is **`/graphql/`** with GraphiQL enabled. The schema is defined
 Tests use Django’s `TestCase` and Graphene-Django’s `GraphQLTestCase`.
 
 - Run: `make test` (or `docker compose exec web python manage.py test`)
-- Files: `tests/test_models.py`, `tests/test_queries.py`, `tests/test_mutations.py`
+- Files: `inventory/tests/mutations/*`, `inventory/tests/queries/*`, `inventory/tests/test_models.py`
 
 > See **`docs/Testing.md`** for test structure, fixtures, and extension tips.
 
